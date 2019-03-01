@@ -307,8 +307,8 @@ class ExperimentBuilder(nn.Module):
         if idx == number_batches - 1:
             x_np = data.inputs[idx*self.batch_size:]
             y = data.targets[idx*self.batch_size:]
-            return x,y
+            return x_np,y
         else:
             x_np = data.inputs[idx*self.batch_size:(idx+1)*self.batch_size]
             y = data.targets[idx*self.batch_size:(idx+1)*self.batch_size]
-            return x,y
+            return x_np,y
