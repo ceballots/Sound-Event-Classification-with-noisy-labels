@@ -227,7 +227,8 @@ class ExperimentBuilder(nn.Module):
             with tqdm.tqdm(total=train_number_batches-1) as pbar_train:  # create a progress bar for training
                  for idx in range(train_number_batches-1):                   
                     x,y = self.get_batch(data = self.train_data,
-                                             idx = idx, number_batches = train_number_batches)                     
+                                             idx = idx, number_batches = train_number_batches)
+                     
                     loss, accuracy = self.run_train_iter(x=x, y=y)  # take a training iter step
                     current_epoch_losses["train_loss"].append(loss)  # add current iter loss to the train loss list
                     current_epoch_losses["train_acc"].append(accuracy)  # add current iter acc to the train acc list

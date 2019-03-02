@@ -290,25 +290,24 @@ class AudioDataProvider(DataProvider):
             'Got {0}'.format(which_set)
         )
 
-
+        data_size = 10000
+        if which_set == 'train':
+            data_size = 60000
+        
 
         self.which_set = which_set
-        self.num_classes = 20
-        if which_set == "train":
-            data_size=17310
-        if which_set == "test":
-            data_size=947
-        if which_set == "valid":
-            data_size = 275
+        print("Change number of classes !! check they are 20")
+        self.num_classes = 10
         
-        h5_first_path = "/home/jordi/Data/DataProcessed"   
+        
+        h5_first_path = "/home/jordi/mnist"   
         
         h5_data_path = os.path.join(h5_first_path,
-                                    'processed_{}_set.hdf5'.format(which_set))
+                                    'mnist_{}_set.hdf5'.format(which_set))
         
-        csv_first_path = "/home/jordi/Data/FSDnoisy18k.meta"
+        csv_first_path = "/home/jordi/mnist"
         csv_data_path = os.path.join(csv_first_path,
-                                    '{}_set.csv'.format(which_set))
+                                    'mnist_{}.csv'.format(which_set))
 
         assert os.path.isfile(h5_data_path), (
             'Data file does not exist at expected path: ' + h5_data_path
@@ -324,7 +323,8 @@ class AudioDataProvider(DataProvider):
         
         # Create dictionary to assure one_of_k_targets work
         df=pd.read_csv(csv_data_path)    
-        keys = df.label.unique()
+        print(df.head())
+        keys = df.pix_0.unique()
         keys_sorted = sorted(keys)
         values = np.arange(0,len(keys_sorted))
         dict_ = dict(zip(keys_sorted,values))

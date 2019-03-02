@@ -20,24 +20,25 @@ torch.manual_seed(seed=args.seed) # sets pytorch's seed
 num_filters = [int(filt) for filt in args.num_filters[0].split(",")]
 
 assert len(num_filters) == args.num_layers, "Not specified number of filter per each layer!"
-print(" first assert!!!! now reading data")
+#print(" first assert!!!! now reading data")
 
 
 
 train_data = data_providers.AudioDataProvider('train', batch_size=args.batch_size,
                                                rng=rng,shuffle_order=False)  # initialize our rngs using the argument set seed
-print("train read")
-val_data = data_providers.AudioDataProvider('valid', batch_size=args.batch_size,
+
+val_data = data_providers.AudioDataProvider('test', batch_size=args.batch_size,
                                              rng=rng,shuffle_order=False)  # initialize our rngs using the argument set seed
-print("val ok")
+print("Change validation which set, now is equal to test to check if works")
 test_data = data_providers.AudioDataProvider('test', batch_size=args.batch_size,
                                               rng=rng,shuffle_order=False)  # initialize our rngs using the argument set seed
-print("test ok")
 
 
 assert train_data.dict_ == val_data.dict_ == test_data.dict_, "Different dictionaries!"
 
-print("second assert!!!")
+print(train_data.dict_)
+print(val_data.dict_)
+print(test_data.dict_)
 
 custom_conv_net = ConvolutionalNetwork(  # initialize our network object, in this case a ConvNet
     input_shape=(args.batch_size, args.image_num_channels, args.image_height, args.image_width),
