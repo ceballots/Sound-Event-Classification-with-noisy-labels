@@ -1,3 +1,4 @@
+
 from torch import nn
 from copy import deepcopy
 import torch
@@ -12,7 +13,7 @@ import numpy as np
 import time
 import math
 
-from storage_utils import save_statistics,save_parameters
+from storage_utils import save_statistics,save_parameters,load_statistics
 
 class ExperimentBuilder(nn.Module):
     def __init__(self, network_model, experiment_name, num_epochs, train_data, val_data,
@@ -148,6 +149,7 @@ class ExperimentBuilder(nn.Module):
         y = y.to(self.device)
 
         out = self.model.forward(x)  # forward the data in the model
+        
         loss = F.cross_entropy(input=out, target=y)  # compute loss
 
         self.optimizer.zero_grad()  # set all weight grads from previous training iters to 0
@@ -222,8 +224,8 @@ class ExperimentBuilder(nn.Module):
             current_epoch_losses = {"train_acc": [], "train_loss": [], "val_acc": [], "val_loss": []}
             
             print("num batches",train_number_batches)
-            with tqdm.tqdm(total=train_number_batches) as pbar_train:  # create a progress bar for training
-                 for idx in range(train_number_batches):                   
+            with tqdm.tqdm(total=train_number_batches-1) as pbar_train:  # create a progress bar for training
+                 for idx in range(train_number_batches-1):                   
                     x,y = self.get_batch(data = self.train_data,
                                              idx = idx, number_batches = train_number_batches)                     
                     loss, accuracy = self.run_train_iter(x=x, y=y)  # take a training iter step
@@ -262,11 +264,15 @@ class ExperimentBuilder(nn.Module):
             epoch_elapsed_time = time.time() - epoch_start_time  # calculate time taken for epoch
             epoch_elapsed_time = "{:.4f}".format(epoch_elapsed_time)
             print("Epoch {}:".format(epoch_idx), out_string, "epoch time", epoch_elapsed_time, "seconds")
+            self.state['current_epoch_idx']=epoch_idx
+            self.state['best_val_model_acc']=self.best_val_model_acc
+            self.state['best_val_model_idx']=self.best_val_model_idx
             self.save_model(model_save_dir=self.experiment_saved_models,
                             # save model and best val idx and best val acc, using the model dir, model name and model idx
-                            model_save_name="train_model", model_idx=epoch_idx,
-                            best_validation_model_idx=self.best_val_model_idx,
-                            best_validation_model_acc=self.best_val_model_acc)
+                            model_save_name="train_model", model_idx=epoch_idx,state=self.state)
+
+            self.save_model(model_save_dir=self.experiment_saved_models,
+                            model_save_name="train_model",model_idx='latest',state=self.state)
 
         print("Generating test set evaluation metrics")
         self.load_model(model_save_dir=self.experiment_saved_models, model_idx=self.best_val_model_idx,
@@ -303,7 +309,7 @@ class ExperimentBuilder(nn.Module):
         :param idx: current batch number
         :param number_batches: number of batches in set
         """
-        
+
         if idx == number_batches - 1:
             x_np = data.inputs[idx*self.batch_size:]
             y = data.targets[idx*self.batch_size:]
