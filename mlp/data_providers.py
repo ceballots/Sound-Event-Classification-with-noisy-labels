@@ -301,12 +301,12 @@ class AudioDataProvider(DataProvider):
         if which_set == "valid":
             data_size = 275
         
-        h5_first_path = "/home/jordi/Data/DataProcessed"   
+        h5_first_path = "/home/s1456085/DataProcessed"   
         
         h5_data_path = os.path.join(h5_first_path,
                                     'processed_{}_set.hdf5'.format(which_set))
         
-        csv_first_path = "/home/jordi/Data/FSDnoisy18k.meta"
+        csv_first_path = "/home/s1456085/project_audio/FSDnoisy18k.meta"
         csv_data_path = os.path.join(csv_first_path,
                                     '{}_set.csv'.format(which_set))
 
