@@ -301,14 +301,14 @@ class AudioDataProvider(DataProvider):
         if which_set == "valid":
             data_size = 275
         
-        h5_first_path = "DataProcessing/DataProcessed"   
+        h5_first_path = "gdrive/My Drive/DataProcessed"   
         
         h5_data_path = os.path.join(h5_first_path,
                                     'processed_{}_set.hdf5'.format(which_set))
         
-        csv_first_path = "DataProcessing/FSDnoisy18k.meta"
-        csv_data_path = os.path.join(h5_first_path,
-                                    '{}_set.hdf5'.format(which_set))
+        csv_first_path = "gdrive/My Drive/FSDnoisy18k.meta"
+        csv_data_path = os.path.join(csv_first_path,
+                                    '{}_set.csv'.format(which_set))
 
         assert os.path.isfile(h5_data_path), (
             'Data file does not exist at expected path: ' + h5_data_path
