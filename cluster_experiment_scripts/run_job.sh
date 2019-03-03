@@ -37,6 +37,6 @@ export DATASET_DIR=${TMP}/datasets/
 source /home/${STUDENT_ID}/miniconda3/bin/activate mlp
 cd ..
 python train_evaluate_emnist_classification_system.py --num_layers 4 --num_filters 48,64,128,256 --kernel_size 3 --batch_size 64 \
-                                                       --use_cluster True  --num_epochs 20 --training_instances 17310 \ 
+                                                       --use_cluster True  --num_epochs 100 --training_instances 17310 \ 
                                                        --val_instances 275 --test_instance 947 --image_height 40 --image_width 173 \ 
                                                        --use_gpu True --gpu_id "0,1,2,3" --experiment_name exp_audio_01_Melvin
