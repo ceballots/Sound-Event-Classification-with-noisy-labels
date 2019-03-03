@@ -92,7 +92,8 @@ class ExperimentBuilder(nn.Module):
             os.mkdir(self.experiment_saved_models)  # create the experiment saved models directory
             
         # Safe parameters with which are running
-        save_parameters(args,self.experiment_logs)
+        if use_gpu:
+            save_parameters(args,self.experiment_logs)
         
         self.num_epochs = num_epochs
         self.criterion = nn.CrossEntropyLoss().to(self.device)  # send the loss computation to the GPU
