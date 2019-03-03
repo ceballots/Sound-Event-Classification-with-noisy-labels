@@ -143,10 +143,13 @@ class ConvolutionalNetwork(nn.Module):
                                                                                        padding=1,
                                                                                        bias=self.use_bias, stride=2,
                                                                                        dilation=1)
-
+                
+                self.layer_dict['batch_{}'.format(i)] = nn.BatchNorm2d(num_features=self.num_filters[i])
+                
                 out = self.layer_dict['dim_reduction_strided_conv_{}'.format(i)](
                     out)  # use strided conv to get an output
                 out = F.relu(out)  # apply relu to the output
+                out = self.layer_dict['batch_{}'.format(i)](out)
             elif self.dim_reduction_type == 'dilated_convolution':  # if dim reduction is dilated conv, then add a dilated conv, using an arbitrary dilation rate of i + 2 (so it gets smaller as we go, you can choose other dilation rates should you wish to do it.)
                 self.layer_dict['dim_reduction_dilated_conv_{}'.format(i)] = nn.Conv2d(in_channels=out.shape[1],
                                                                                        kernel_size=3,
@@ -190,6 +193,7 @@ class ConvolutionalNetwork(nn.Module):
             out = self.layer_dict['conv_{}'.format(i)](out)  # pass through conv layer indexed at i
             #print("memory",torch.cuda.memory_allocated())
             out = F.relu(out)  # pass conv outputs through ReLU
+            out = self.layer_dict['batch_{}'.format(i)](out)
             if self.dim_reduction_type == 'strided_convolution':  # if strided convolution dim reduction then
                 out = self.layer_dict['dim_reduction_strided_conv_{}'.format(i)](
                     out)  # pass previous outputs through a strided convolution indexed i
