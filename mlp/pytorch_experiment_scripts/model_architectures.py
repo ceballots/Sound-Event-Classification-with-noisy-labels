@@ -172,6 +172,9 @@ class ConvolutionalNetwork(nn.Module):
             elif self.dim_reduction_type == 'avg_pooling':
                 self.layer_dict['dim_reduction_avg_pool_{}'.format(i)] = nn.AvgPool2d(2, padding=1)
                 out = self.layer_dict['dim_reduction_avg_pool_{}'.format(i)](out)
+                
+            self.layer_dict['droput_max_pool{}'.format(i)] = nn.Dropout2d(0.6)
+            out = self.layer_dict['droput_max_pool{}'.format(i)](out)
 
             print(out.shape)
         if out.shape[-1] != 2:
@@ -212,6 +215,8 @@ class ConvolutionalNetwork(nn.Module):
 
             elif self.dim_reduction_type == 'avg_pooling':
                 out = self.layer_dict['dim_reduction_avg_pool_{}'.format(i)](out)
+                
+            out = self.layer_dict['droput_max_pool{}'.format(i)](out)
 
         if out.shape[-1] != 2:
             out = F.adaptive_avg_pool2d(out, 2)
