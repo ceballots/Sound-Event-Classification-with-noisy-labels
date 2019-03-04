@@ -9,6 +9,8 @@ import torchvision
 import tqdm
 import os
 
+from pytorch_experiment_scripts.droput_scheduler import DropoutScheduler
+
 
 class FCCNetwork(nn.Module):
     def __init__(self, input_shape, num_output_classes, num_filters, num_layers, use_bias=False):
@@ -31,6 +33,7 @@ class FCCNetwork(nn.Module):
         self.layer_dict = nn.ModuleDict()
         # build the network
         self.build_module()
+        
 
     def build_module(self):
         print("Building basic block of FCCNetwork using input shape", self.input_shape)
@@ -89,7 +92,7 @@ class FCCNetwork(nn.Module):
 
 
 class ConvolutionalNetwork(nn.Module):
-    def __init__(self, input_shape, dim_reduction_type, num_output_classes, num_filters, num_layers,kernel_size, use_bias=False):
+    def __init__(self, input_shape, dim_reduction_type, num_output_classes, num_filters, num_layers,kernel_size,min_dropout = 0.2, max_dropout = .8, use_bias=False):
         """
         Initializes a convolutional network module object.
         :param input_shape: The shape of the inputs going in to the network.
@@ -111,6 +114,9 @@ class ConvolutionalNetwork(nn.Module):
         # initialize a module dict, which is effectively a dictionary that can collect layers and integrate them into pytorch
         self.layer_dict = nn.ModuleDict()
         # build the network
+        self.scheduler = DropoutScheduler(min_dropout,max_dropout)
+        self.min_dropout = min_dropout
+        self.max_dropout = max_dropout
         self.build_module()
 
     def build_module(self):
@@ -216,6 +222,8 @@ class ConvolutionalNetwork(nn.Module):
             elif self.dim_reduction_type == 'avg_pooling':
                 out = self.layer_dict['dim_reduction_avg_pool_{}'.format(i)](out)
                 
+            p = self.scheduler.UpdateDropout(epoch_number = epoch_number)
+            self.layer_dict['droput_max_pool{}'.format(i)].p = p
             out = self.layer_dict['droput_max_pool{}'.format(i)](out)
 
         if out.shape[-1] != 2:
