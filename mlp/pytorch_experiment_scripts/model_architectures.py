@@ -9,7 +9,7 @@ import torchvision
 import tqdm
 import os
 
-from pytorch_experiment_scripts.droput_scheduler import DropoutScheduler
+from mlp.pytorch_experiment_scripts.droput_scheduler import DropoutScheduler
 
 
 class FCCNetwork(nn.Module):
@@ -92,7 +92,7 @@ class FCCNetwork(nn.Module):
 
 
 class ConvolutionalNetwork(nn.Module):
-    def __init__(self, input_shape, dim_reduction_type, num_output_classes, num_filters, num_layers,kernel_size,min_dropout = 0.2, max_dropout = .8, use_bias=False):
+    def __init__(self, input_shape, dim_reduction_type, num_output_classes, num_filters, num_layers,kernel_size,num_epochs,min_dropout = 0.2, max_dropout = .8, use_bias=False):
         """
         Initializes a convolutional network module object.
         :param input_shape: The shape of the inputs going in to the network.
@@ -114,7 +114,8 @@ class ConvolutionalNetwork(nn.Module):
         # initialize a module dict, which is effectively a dictionary that can collect layers and integrate them into pytorch
         self.layer_dict = nn.ModuleDict()
         # build the network
-        self.scheduler = DropoutScheduler(min_dropout,max_dropout)
+        self.num_epochs = num_epochs
+        self.scheduler = DropoutScheduler(min_dropout,max_dropout,num_epochs)
         self.min_dropout = min_dropout
         self.max_dropout = max_dropout
         self.build_module()
@@ -194,7 +195,7 @@ class ConvolutionalNetwork(nn.Module):
         print("Block is built, output volume is", out.shape)
         return out
 
-    def forward(self, x):
+    def forward_train(self, x,epoch_number = -1):
         """
         Forward propages the network given an input batch
         :param x: Inputs x (b, c, h, w)
@@ -225,6 +226,41 @@ class ConvolutionalNetwork(nn.Module):
             p = self.scheduler.UpdateDropout(epoch_number = epoch_number)
             self.layer_dict['droput_max_pool{}'.format(i)].p = p
             out = self.layer_dict['droput_max_pool{}'.format(i)](out)
+
+        if out.shape[-1] != 2:
+            out = F.adaptive_avg_pool2d(out, 2)
+        out = out.view(out.shape[0], -1)  # flatten outputs from (b, c, h, w) to (b, c*h*w)
+        out = self.logit_linear_layer(out)  # pass through a linear layer to get logits/preds
+        return out
+    
+    def forward(self, x,epoch_number = -1):
+        """
+        Forward propages the network given an input batch
+        :param x: Inputs x (b, c, h, w)
+        :return: preds (b, num_classes)
+        """
+        out = x
+        for i in range(self.num_layers):  # for number of layers
+
+            out = self.layer_dict['conv_{}'.format(i)](out)  # pass through conv layer indexed at i
+            #print("memory",torch.cuda.memory_allocated())
+            out = F.relu(out)  # pass conv outputs through ReLU
+            out = self.layer_dict['batch_{}'.format(i)](out)
+            if self.dim_reduction_type == 'strided_convolution':  # if strided convolution dim reduction then
+                out = self.layer_dict['dim_reduction_strided_conv_{}'.format(i)](
+                    out)  # pass previous outputs through a strided convolution indexed i
+                out = F.relu(out)  # pass strided conv outputs through ReLU
+
+            elif self.dim_reduction_type == 'dilated_convolution':
+                out = self.layer_dict['dim_reduction_dilated_conv_{}'.format(i)](out)
+                out = F.relu(out)
+
+            elif self.dim_reduction_type == 'max_pooling':
+                out = self.layer_dict['dim_reduction_max_pool_{}'.format(i)](out)
+
+            elif self.dim_reduction_type == 'avg_pooling':
+                out = self.layer_dict['dim_reduction_avg_pool_{}'.format(i)](out)
+                
 
         if out.shape[-1] != 2:
             out = F.adaptive_avg_pool2d(out, 2)

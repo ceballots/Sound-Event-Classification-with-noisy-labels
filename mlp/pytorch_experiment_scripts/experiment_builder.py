@@ -127,7 +127,7 @@ class ExperimentBuilder(nn.Module):
         return total_num_params
 
 
-    def run_train_iter(self, x, y):
+    def run_train_iter(self, x, y,epoch_number = -1):
         """
         Receives the inputs and targets for the model and runs a training iteration. Returns loss and accuracy metrics.
         :param x: The inputs to the model. A numpy array of shape batch_size, channels, height, width
@@ -149,7 +149,7 @@ class ExperimentBuilder(nn.Module):
         x = x.to(self.device)
         y = y.to(self.device)
 
-        out = self.model.forward(x)  # forward the data in the model
+        out = self.model.forward_train(x)  # forward the data in the model
         
         loss = F.cross_entropy(input=out, target=y)  # compute loss
 
@@ -229,7 +229,7 @@ class ExperimentBuilder(nn.Module):
                  for idx in range(train_number_batches-1):                   
                     x,y = self.get_batch(data = self.train_data,
                                              idx = idx, number_batches = train_number_batches)                     
-                    loss, accuracy = self.run_train_iter(x=x, y=y)  # take a training iter step
+                    loss, accuracy = self.run_train_iter(x=x, y=y,epoch_number = epoch_idx)  # take a training iter step
                     current_epoch_losses["train_loss"].append(loss)  # add current iter loss to the train loss list
                     current_epoch_losses["train_acc"].append(accuracy)  # add current iter acc to the train acc list
                     pbar_train.update(1)
