@@ -37,8 +37,10 @@ assert train_data.dict_ == val_data.dict_ == test_data.dict_, "Different diction
 custom_conv_net = ConvolutionalNetwork(  # initialize our network object, in this case a ConvNet
     input_shape=(args.batch_size, args.image_num_channels, args.image_height, args.image_width),
     dim_reduction_type=args.dim_reduction_type,
-        num_output_classes=train_data.num_classes, num_filters=num_filters,kernel_size = args.kernel_size,        num_layers=args.num_layers, num_epochs = args.num_epochs,use_bias=False)
+        num_output_classes=train_data.num_classes, num_filters=num_filters,kernel_size = args.kernel_size,        num_layers=args.num_layers, dropout=args.dropout_rate,use_bias=False)
+
 print("definicion convolutional network ok")
+
 conv_experiment = ExperimentBuilder(network_model=custom_conv_net,
                                     experiment_name=args.experiment_name,
                                     num_epochs=args.num_epochs,
@@ -52,7 +54,10 @@ conv_experiment = ExperimentBuilder(network_model=custom_conv_net,
                                     val_instances = args.val_instances,
                                     image_height = args.image_height,
                                     image_width=args.image_width,
+                                    loss_function=args.loss_function,
                                     use_cluster = args.use_cluster,
                                     gpu_id=args.gpu_id,
+                                    q_ = args.q_parameter,
                                     args = args)  # build an experiment object
+
 experiment_metrics, test_metrics = conv_experiment.run_experiment()  # run experiment and return experiment metrics

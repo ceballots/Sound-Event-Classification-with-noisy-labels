@@ -49,6 +49,12 @@ def get_args():
                         help='A flag indicating whether we will use the cluster or not')
     parser.add_argument('--weight_decay_coefficient', nargs="?", type=float, default=1e-05,
                         help='Weight decay to use for Adam')
+    parser.add_argument('--dropout_rate', nargs="?", type=float, default=0.,
+                        help='Dropout rate')
+    parser.add_argument('--loss_function', nargs="?", type=str, default='CCE',
+                        help='One of [CCE,lq_loss , , ]')  
+    parser.add_argument('--q_parameter', nargs="?", type=float, default=0.8,
+                        help='q parameter for loss_q, by default 0.8')
     args = parser.parse_args()
     
     gpu_id = str(args.gpu_id)

@@ -9,7 +9,6 @@ import torchvision
 import tqdm
 import os
 
-from mlp.pytorch_experiment_scripts.droput_scheduler import DropoutScheduler
 
 
 class FCCNetwork(nn.Module):
@@ -92,7 +91,7 @@ class FCCNetwork(nn.Module):
 
 
 class ConvolutionalNetwork(nn.Module):
-    def __init__(self, input_shape, dim_reduction_type, num_output_classes, num_filters, num_layers,kernel_size,num_epochs,min_dropout = 0.2, max_dropout = .8, use_bias=False):
+    def __init__(self, input_shape, dim_reduction_type, num_output_classes, num_filters, num_layers,kernel_size,dropout, use_bias=False):
         """
         Initializes a convolutional network module object.
         :param input_shape: The shape of the inputs going in to the network.
@@ -115,9 +114,7 @@ class ConvolutionalNetwork(nn.Module):
         self.layer_dict = nn.ModuleDict()
         # build the network
         self.num_epochs = num_epochs
-        self.scheduler = DropoutScheduler(min_dropout,max_dropout,num_epochs)
-        self.min_dropout = min_dropout
-        self.max_dropout = max_dropout
+        self.dropout = dropout
         self.build_module()
 
     def build_module(self):
@@ -180,7 +177,7 @@ class ConvolutionalNetwork(nn.Module):
                 self.layer_dict['dim_reduction_avg_pool_{}'.format(i)] = nn.AvgPool2d(2, padding=1)
                 out = self.layer_dict['dim_reduction_avg_pool_{}'.format(i)](out)
                 
-            self.layer_dict['droput_max_pool{}'.format(i)] = nn.Dropout2d(0.6)
+            self.layer_dict['droput_max_pool{}'.format(i)] = nn.Dropout2d(self.dropout)
             out = self.layer_dict['droput_max_pool{}'.format(i)](out)
 
             print(out.shape)
@@ -224,7 +221,6 @@ class ConvolutionalNetwork(nn.Module):
                 out = self.layer_dict['dim_reduction_avg_pool_{}'.format(i)](out)
                 
             p = self.scheduler.UpdateDropout(epoch_number = epoch_number)
-            self.layer_dict['droput_max_pool{}'.format(i)].p = p
             out = self.layer_dict['droput_max_pool{}'.format(i)](out)
 
         if out.shape[-1] != 2:

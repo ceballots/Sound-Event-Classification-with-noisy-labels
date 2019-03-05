@@ -14,11 +14,12 @@ import time
 import math
 
 from storage_utils import save_statistics,save_parameters,load_statistics
+import losses as CustomLosses
 
 class ExperimentBuilder(nn.Module):
     def __init__(self, network_model, experiment_name, num_epochs, train_data, val_data,
                  test_data,batch_size, weight_decay_coefficient, use_gpu,training_instances,
-                 test_instances,val_instances,image_height, image_width,use_cluster,args,gpu_id,continue_from_epoch=-1):
+                 test_instances,val_instances,image_height, image_width,loss_function,use_cluster,args,gpu_id,q_=0.8,continue_from_epoch=-1):
         """
         Initializes an ExperimentBuilder object. Such an object takes care of running training and evaluation of a deep net
         on a given dataset. It also takes care of saving per epoch models and automatically inferring the best val model
@@ -81,6 +82,8 @@ class ExperimentBuilder(nn.Module):
         # Set best models to be at 0 since we are just starting
         self.best_val_model_idx = 0
         self.best_val_model_acc = 0.
+        self.loss_function = loss_function
+        self.q_ = q_
 
         if not os.path.exists(self.experiment_folder):  # If experiment directory does not exist
             os.mkdir(self.experiment_folder)  # create the experiment directory
@@ -151,7 +154,10 @@ class ExperimentBuilder(nn.Module):
 
         out = self.model.forward_train(x)  # forward the data in the model
         
-        loss = F.cross_entropy(input=out, target=y)  # compute loss
+        if self.loss_function=='CCE':
+            loss = F.cross_entropy(input=out, target=y)  # compute loss
+        elif self.loss_function=='lq_loss':
+            loss=CustomLosses.lq_loss(y_true=y,y_pred=out,self.q_)
 
         self.optimizer.zero_grad()  # set all weight grads from previous training iters to 0
         loss.backward()  # backpropagate to compute gradients for current iter loss
@@ -178,7 +184,12 @@ class ExperimentBuilder(nn.Module):
         x = x.to(self.device)
         y = y.to(self.device)
         out = self.model.forward(x)  # forward the data in the model
-        loss = F.cross_entropy(out, y)  # compute loss
+        
+        if self.loss_function=='CCE':
+            loss = F.cross_entropy(input=out, target=y)  # compute loss
+        elif self.loss_function=='lq_loss':
+            loss=CustomLosses.lq_loss(y_true=y,y_pred=out,self.q_)
+            
         _, predicted = torch.max(out.data, 1)  # get argmax of predictions
         accuracy = np.mean(list(predicted.eq(y.data).cpu()))  # compute accuracy
         return loss.data.detach().cpu().numpy(), accuracy
