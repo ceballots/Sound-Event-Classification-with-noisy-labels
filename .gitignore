@@ -1,0 +1,8 @@
+mlp/__pycache__/*
+exp_audio/*
+exp_audio_*
+mlp/pytorch_experiment_scripts/__pycache__/*
+mlp/__pycache__/__init__.cpython-36.pyc
+mlp/__pycache__/__init__.cpython-37.pyc
+mlp/__pycache__/data_providers.cpython-36.pyc
+mlp/__pycache__/data_providers.cpython-37.pyc

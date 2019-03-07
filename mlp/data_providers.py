@@ -133,7 +133,7 @@ class DataProvider(object):
         targets_batch = self.targets[batch_slice]
         self._curr_batch += 1
         return inputs_batch, targets_batch
-    
+
 class EMNISTDataProvider(DataProvider):
     """Data provider for EMNIST handwritten digit images."""
 
@@ -293,22 +293,23 @@ class AudioDataProvider(DataProvider):
 
 
         self.which_set = which_set
-        self.num_classes = 20
+        print("Change num classes and dataset size")
+        self.num_classes =  20
         if which_set == "train":
-            data_size=17310
+            data_size= 171310 #9473 #17310
         if which_set == "test":
-            data_size=947
+            data_size= 947#1600 #947
         if which_set == "valid":
             data_size = 275
         
         #h5_first_path = "/home/jordi/Data/DataProcessed"   
-        h5_first_path = "C:\\Users\\jordi\\Desktop\\DataProcessing\\DataProcessed"   
+        h5_first_path = "/home/fabian/DataProcessed"   
         
         h5_data_path = os.path.join(h5_first_path,
                                     'processed_{}_set.hdf5'.format(which_set))
         
-        #csv_first_path = "/home/jordi/Data/FSDnoisy18k.meta"
-        csv_first_path = "C:\\Users\\jordi\\Desktop\\project\\FSDnoisy18k.meta"
+        csv_first_path = "/home/fabian/project_audio/FSDnoisy18k.meta"
+        #csv_first_path = "/home/fabian/fsd2018/FSDKaggle2018.meta"
         csv_data_path = os.path.join(csv_first_path,
                                     '{}_set.csv'.format(which_set))
 

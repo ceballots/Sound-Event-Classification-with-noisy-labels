@@ -157,7 +157,7 @@ class ExperimentBuilder(nn.Module):
         if self.loss_function=='CCE':
             loss = F.cross_entropy(input=out, target=y)  # compute loss
         elif self.loss_function=='lq_loss':
-            loss=CustomLosses.lq_loss(y_true=y,y_pred=out,self.q_)
+            loss=CustomLosses.lq_loss(y_true=y,y_pred=out,_q=self.q_)
 
         self.optimizer.zero_grad()  # set all weight grads from previous training iters to 0
         loss.backward()  # backpropagate to compute gradients for current iter loss
@@ -188,7 +188,7 @@ class ExperimentBuilder(nn.Module):
         if self.loss_function=='CCE':
             loss = F.cross_entropy(input=out, target=y)  # compute loss
         elif self.loss_function=='lq_loss':
-            loss=CustomLosses.lq_loss(y_true=y,y_pred=out,self.q_)
+            loss=CustomLosses.lq_loss(y_true=y,y_pred=out,_q=self.q_)
             
         _, predicted = torch.max(out.data, 1)  # get argmax of predictions
         accuracy = np.mean(list(predicted.eq(y.data).cpu()))  # compute accuracy

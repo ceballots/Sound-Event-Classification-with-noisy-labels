@@ -25,7 +25,7 @@ assert len(num_filters) == args.num_layers, "Not specified number of filter per 
 
 train_data = data_providers.AudioDataProvider('train', batch_size=args.batch_size,
                                                rng=rng,shuffle_order=False)  # initialize our rngs using the argument set seed
-val_data = data_providers.AudioDataProvider('valid', batch_size=args.batch_size,
+val_data = data_providers.AudioDataProvider('test', batch_size=args.batch_size,
                                              rng=rng,shuffle_order=False)  # initialize our rngs using the argument set seed
 test_data = data_providers.AudioDataProvider('test', batch_size=args.batch_size,
                                               rng=rng,shuffle_order=False)  # initialize our rngs using the argument set seed

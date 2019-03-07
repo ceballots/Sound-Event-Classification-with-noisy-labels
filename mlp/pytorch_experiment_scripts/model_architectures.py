@@ -113,7 +113,6 @@ class ConvolutionalNetwork(nn.Module):
         # initialize a module dict, which is effectively a dictionary that can collect layers and integrate them into pytorch
         self.layer_dict = nn.ModuleDict()
         # build the network
-        self.num_epochs = num_epochs
         self.dropout = dropout
         self.build_module()
 
@@ -220,7 +219,7 @@ class ConvolutionalNetwork(nn.Module):
             elif self.dim_reduction_type == 'avg_pooling':
                 out = self.layer_dict['dim_reduction_avg_pool_{}'.format(i)](out)
                 
-            p = self.scheduler.UpdateDropout(epoch_number = epoch_number)
+            
             out = self.layer_dict['droput_max_pool{}'.format(i)](out)
 
         if out.shape[-1] != 2:
