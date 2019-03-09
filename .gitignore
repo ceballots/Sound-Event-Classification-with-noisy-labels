@@ -1,3 +1,4 @@
+.ipynb_checkpoints/
 mlp/__pycache__/*
 exp_audio/*
 exp_audio_*
@@ -6,3 +7,6 @@ mlp/__pycache__/__init__.cpython-36.pyc
 mlp/__pycache__/__init__.cpython-37.pyc
 mlp/__pycache__/data_providers.cpython-36.pyc
 mlp/__pycache__/data_providers.cpython-37.pyc
+mlp/__pycache__/data_providers.cpython-37.pyc
+mlp/pytorch_experiment_scripts/__pycache__/arg_extractor.cpython-37.pyc
+mlp/pytorch_experiment_scripts/__pycache__/experiment_builder.cpython-37.pyc
