@@ -127,8 +127,17 @@ class ConvolutionalNetwork(nn.Module):
         
         
         
+        
+        
         # torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
         for i in range(self.num_layers):  # for number of layers times
+            
+            if i == 0:
+                self.layer_dict['batch_{}'.format(i)] = nn.BatchNorm2d(num_features=1)
+            else:
+                self.layer_dict['batch_{}'.format(i)] = nn.BatchNorm2d(num_features=self.num_filters[i-1])
+            
+            self.layer_dict['batch_after_conv{}'.format(i)] = nn.BatchNorm2d(num_features=self.num_filters[i])
             
             self.layer_dict['conv_{}'.format(i)] = nn.Conv2d(in_channels=out.shape[1],
                                                              # add a conv layer in the module dict
@@ -136,11 +145,14 @@ class ConvolutionalNetwork(nn.Module):
                                                              out_channels=self.num_filters[i], padding=1,
                                                              bias=self.use_bias)
             
-            self.layer_dict['batch_{}'.format(i)] = nn.BatchNorm2d(num_features=self.num_filters[i])
-
-            out = self.layer_dict['conv_{}'.format(i)](out)  # use layer on inputs to get an output
-            out = F.relu(out)  # apply relu
+            
+            # https://arxiv.org/abs/1603.05027
             out = self.layer_dict['batch_{}'.format(i)](out)
+            out = F.relu(out)
+            out = self.layer_dict['conv_{}'.format(i)](out)  # use layer on inputs to get an output
+            out = self.layer_dict['batch_after_conv{}'.format(i)](out) 
+            out = F.relu(out)  # apply relu
+            
             print(out.shape)
             if self.dim_reduction_type == 'strided_convolution':  # if dim reduction is strided conv, then add a strided conv
                 self.layer_dict['dim_reduction_strided_conv_{}'.format(i)] = nn.Conv2d(in_channels=out.shape[1],
@@ -169,24 +181,25 @@ class ConvolutionalNetwork(nn.Module):
                 out = F.relu(out)  # apply relu on output
 
             elif self.dim_reduction_type == 'max_pooling':
-                self.layer_dict['dim_reduction_max_pool_{}'.format(i)] = nn.MaxPool2d((4,2), padding=1)
-                out = self.layer_dict['dim_reduction_max_pool_{}'.format(i)](out)
+                self.layer_dict['dim_reduction_max_pool_{}'.format(i)] = nn.MaxPool2d((2,2), padding=1)
 
             elif self.dim_reduction_type == 'avg_pooling':
                 self.layer_dict['dim_reduction_avg_pool_{}'.format(i)] = nn.AvgPool2d(2, padding=1)
                 out = self.layer_dict['dim_reduction_avg_pool_{}'.format(i)](out)
                 
-            self.layer_dict['droput_max_pool{}'.format(i)] = nn.Dropout2d(self.dropout)
-            out = self.layer_dict['droput_max_pool{}'.format(i)](out)
+            self.layer_dict['droput_{}'.format(i)] = nn.Dropout2d(self.dropout)
+            out = self.layer_dict['droput_{}'.format(i)](out)
 
             print(out.shape)
         if out.shape[-1] != 2:
             out = F.adaptive_avg_pool2d(out, 2)  # apply adaptive pooling to make sure output of conv layers is always (2, 2) spacially (helps with comparisons).
         print('shape before final linear layer', out.shape)
         out = out.view(out.shape[0], -1)
+        self.layer_dict['dropout_linnear'] = nn.dropout(self.dropout)
         self.logit_linear_layer = nn.Linear(in_features=out.shape[1],  # add a linear layer
                                             out_features=self.num_output_classes,
                                             bias=self.use_bias)
+        out = self.layer_dict['dropout_linner'](out)
         out = self.logit_linear_layer(out)  # apply linear layer on flattened inputs
         print("Block is built, output volume is", out.shape)
         return out
@@ -199,11 +212,13 @@ class ConvolutionalNetwork(nn.Module):
         """
         out = x
         for i in range(self.num_layers):  # for number of layers
-
+            
+            out = self.layer_dict['batch_{}'.format(i)](out)
+            out = F.relu(out)
             out = self.layer_dict['conv_{}'.format(i)](out)  # pass through conv layer indexed at i
             #print("memory",torch.cuda.memory_allocated())
+            out = self.layer_dict['batch_after_conv{}'.format(i)](out) 
             out = F.relu(out)  # pass conv outputs through ReLU
-            out = self.layer_dict['batch_{}'.format(i)](out)
             if self.dim_reduction_type == 'strided_convolution':  # if strided convolution dim reduction then
                 out = self.layer_dict['dim_reduction_strided_conv_{}'.format(i)](
                     out)  # pass previous outputs through a strided convolution indexed i
@@ -220,11 +235,12 @@ class ConvolutionalNetwork(nn.Module):
                 out = self.layer_dict['dim_reduction_avg_pool_{}'.format(i)](out)
                 
             
-            out = self.layer_dict['droput_max_pool{}'.format(i)](out)
+            out = self.layer_dict['droput_{}'.format(i)](out)
 
         if out.shape[-1] != 2:
             out = F.adaptive_avg_pool2d(out, 2)
         out = out.view(out.shape[0], -1)  # flatten outputs from (b, c, h, w) to (b, c*h*w)
+        out = self.layer_dict['dropout_linner'](out)
         out = self.logit_linear_layer(out)  # pass through a linear layer to get logits/preds
         return out
     
@@ -237,10 +253,12 @@ class ConvolutionalNetwork(nn.Module):
         out = x
         for i in range(self.num_layers):  # for number of layers
 
+            out = self.layer_dict['batch_{}'.format(i)](out)
+            out = F.relu(out)
             out = self.layer_dict['conv_{}'.format(i)](out)  # pass through conv layer indexed at i
             #print("memory",torch.cuda.memory_allocated())
+            out = self.layer_dict['batch_after_conv{}'.format(i)](out) 
             out = F.relu(out)  # pass conv outputs through ReLU
-            out = self.layer_dict['batch_{}'.format(i)](out)
             if self.dim_reduction_type == 'strided_convolution':  # if strided convolution dim reduction then
                 out = self.layer_dict['dim_reduction_strided_conv_{}'.format(i)](
                     out)  # pass previous outputs through a strided convolution indexed i
