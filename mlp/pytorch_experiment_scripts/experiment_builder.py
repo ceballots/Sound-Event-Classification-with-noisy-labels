@@ -144,19 +144,19 @@ class ExperimentBuilder(nn.Module):
 
         if len(y.shape) > 1:
             y = np.argmax(y, axis=1)  # convert one hot encoded labels to single integer labels
-
+            y_no_cuda = y
         #print(type(x))
 
         if type(x) is np.ndarray:
             x, y = torch.Tensor(x).float().to(device=self.device), torch.Tensor(y).long().to(
             device=self.device)  # send data to device as torch tensors
-
+            y_no_cuda = torch.Tensor(y_no_cuda).long()
         x = x.to(self.device)
         y = y.to(self.device)
 
         out = self.model.forward_train(x)  # forward the data in the model
         
-        loss = CustomLosses.loss_function(out,y,self.num_classes,self.eps_smooth,self.loss_function,
+        loss = CustomLosses.loss_function(out,y,y_no_cuda,self.num_classes,self.device,self.eps_smooth,self.loss_function,
                                           array_manual_label=None,consider_manual = False)
         
        #if self.loss_function=='CCE':
@@ -182,15 +182,17 @@ class ExperimentBuilder(nn.Module):
         self.eval()  # sets the system to validation mode
         if len(y.shape) > 1:
             y = np.argmax(y, axis=1)  # convert one hot encoded labels to single integer labels
+            y_no_cuda = y
         if type(x) is np.ndarray:
             x, y = torch.Tensor(x).float().to(device=self.device), torch.Tensor(y).long().to(
             device=self.device)  # convert data to pytorch tensors and send to the computation device
+            y_no_cuda = torch.Tensor(y_no_cuda).long()
 
         x = x.to(self.device)
         y = y.to(self.device)
         out = self.model.forward(x)  # forward the data in the model
         
-        loss = CustomLosses.loss_function(out,y,self.num_classes,self.eps_smooth,self.loss_function,
+        loss = CustomLosses.loss_function(out,y,y_no_cuda,self.num_classes,self.device,self.eps_smooth,self.loss_function,
                                           array_manual_label=None,consider_manual = False)
         
        #if self.loss_function=='CCE':
