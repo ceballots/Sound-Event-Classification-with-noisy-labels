@@ -1,6 +1,7 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
-
+import numpy as np
 
 
 def lq_loss(y_true,y_pred,q=.8):
@@ -21,4 +22,71 @@ def lq_loss(y_true,y_pred,q=.8):
     _loss = (1 - (_loss + 10 ** (-8)) ** _q) / _q
 
     return _loss
+
+def loss_function(pred,targets,num_classes,eps_smoothing=0,loss_function='CCE',array_manual_label=None,consider_manual = False):
+    """
+    cross entropy loss with label smoothing https://arxiv.org/abs/1512.00567   
+    Extended: array_manual_label indicates if smooth label is applied to that data entry
+    
+    :pred torch.FloatTensor: perdictions
+    :targets torch.Long: Ground truth labels
+    :num classes param: number of classes
+    :eps_smoothing: [0,1] smoothing parameter
+    :loss_function: CCE or MAE
+    :array_manual_label: binary array to indicate if smooth label is applied to that data entry
+    :consider_manual: flag
+    """
+    
+    if (eps_smoothing == 0 and
+       loss_function == 'CCE'):
+        return F.cross_entropy(pred, targets)
+    
+    elif (eps_smoothing == 0 and
+         loss_function == 'MAE'):
+        print('MEA is not implemented yet')
+        return 0
+        
+    
+    pred = F.log_softmax(pred, dim=-1)
+    
+    if eps_smoothing > 0:
+        eps_per_class = eps_smoothing / num_classes
+        
+        p = torch.zeros_like(t).fill_(eps_per_class)
+        targets = p.scatter_(1, y.view(-1,1),1-eps_smoothing)
+                
+        if (consider_manual and
+            len(array_manual_label) > 0):
+            
+            targets = consider_manual_labeled(targets,array_manual_label,num_classes)
+        
+        loss = -(targets * pred)
+        print('loss',loss)
+        loss = loss.sum(dim=1)
+        print('loss',loss)
+        loss = loss.mean()
+        return loss
+
+def consider_manual_labeled(targets,array_manual_label,num_classes):
+    """
+    Function that does not smooth manual verified labels
+    
+    :torch targets:
+    :array array_manual_label:
+    :param num_classes:
+    """
+    
+    count = 0
+    idx_manual = np.nonzero(array_manual_label==1)[0]
+    
+    idx_manual = torch.from_numpy(idx_manual)
+    idx_manual = idx_manual.long()
+    
+    subs = torch.zeros(idx_manual.shape[0],num_classes).scatter_(1,idx_manual.view(-1,1),1)
+    for index in range(targets.shape[0]):
+        if array_manual_label[index] == 1:
+            targets[index] = subs[count]
+            count = count + 1
+    
+    return targets
     
