@@ -15,6 +15,6 @@ for element in $(ls);do
     echo changing speed of $element
     for speed in 0.9 1.2;do
        mkdir -p ../data_${type_data}_${speed}_pitch
-       sox -t wav $element -t wav ../data_${type_data}_${speed}_pitch/$element-${speed}.wav speed -s $speed
+       sox -t 0.98 wav $element -t wav ../data_${type_data}_${speed}_pitch/$element-${speed}.wav speed -s $speed
     done;
 done
