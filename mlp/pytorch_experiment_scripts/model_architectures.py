@@ -153,7 +153,6 @@ class ConvolutionalNetwork(nn.Module):
             out = self.layer_dict['batch_after_conv{}'.format(i)](out) 
             out = F.relu(out)  # apply relu
             
-            print(out.shape)
             if self.dim_reduction_type == 'strided_convolution':  # if dim reduction is strided conv, then add a strided conv
                 self.layer_dict['dim_reduction_strided_conv_{}'.format(i)] = nn.Conv2d(in_channels=out.shape[1],
                                                                                        kernel_size=3,
@@ -201,7 +200,7 @@ class ConvolutionalNetwork(nn.Module):
                                             bias=self.use_bias)
         out = self.layer_dict['dropout_linnear'](out)
         out = self.logit_linear_layer(out)  # apply linear layer on flattened inputs
-        print("Block is built, output volume is", out.shape)
+        #print("Block is built, output volume is", out.shape)
         return out
 
     def forward_train(self, x,epoch_number = -1):

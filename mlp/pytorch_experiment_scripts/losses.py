@@ -44,12 +44,18 @@ def loss_function(pred,targets,y_no_cuda,num_classes,device,eps_smoothing=0,loss
     
     elif (eps_smoothing == 0 and
          loss_function == 'MAE'):
-        print('MEA is not implemented yet')
-        return 0
+#        print('MAE W/O EPS')
+        p = torch.zeros(targets.shape[0],num_classes)
+        targets = p.scatter_(1, y_no_cuda.view(-1,1),1)
+        targets = targets.type(torch.cuda.FloatTensor)
+        pred_probs = F.softmax(pred,dim=-1)
+        loss = nn.L1Loss()
+        return loss(pred_probs,targets)
         
-    
+    pred_probs = F.softmax(pred,dim=-1)
+    pred_probs = pred_probs.to(device)
     pred = F.log_softmax(pred, dim=-1)
-    
+    targets_int =  y_no_cuda
     if eps_smoothing > 0:
         eps_per_class = eps_smoothing / num_classes
         
@@ -59,18 +65,24 @@ def loss_function(pred,targets,y_no_cuda,num_classes,device,eps_smoothing=0,loss
         if (consider_manual and
             len(array_manual_label) > 0):
             
-            targets = consider_manual_labeled(targets,array_manual_label,num_classes)
-
+            targets = consider_manual_labeled(targets,targets_int,array_manual_label,num_classes)
+        
         targets = targets.to(device)
         pred = pred.to(device)
-        loss = -(targets * pred)
-        
-        loss = loss.sum(dim=1)
-        
-        loss = loss.mean()
-        return loss
+        if loss_function == 'CCE':
+            loss = -(targets * pred)
+            loss = loss.sum(dim=1)
+            loss = loss.mean()
+            print(pred)
+            return loss
+        elif loss_function == 'MAE':
+            print('mae w/ eps')
+            print(pred_probs)
+            print(targets)
+            return nn.L1Loss(pred_probs,targets)
+                
 
-def consider_manual_labeled(targets,array_manual_label,num_classes):
+def consider_manual_labeled(targets_one_hot,targets,array_manual_label,num_classes):
     """
     Function that does not smooth manual verified labels
     
@@ -84,12 +96,14 @@ def consider_manual_labeled(targets,array_manual_label,num_classes):
     
     idx_manual = torch.from_numpy(idx_manual)
     idx_manual = idx_manual.long()
-    
-    subs = torch.zeros(idx_manual.shape[0],num_classes).scatter_(1,idx_manual.view(-1,1),1)
+#    print(idx_manual) 
+    subs = torch.zeros(targets.shape[0],num_classes).scatter_(1,targets.view(-1,1),1)
     for index in range(targets.shape[0]):
         if array_manual_label[index] == 1:
-            targets[index] = subs[count]
+
+            targets_one_hot[index] = subs[count]
             count = count + 1
     
-    return targets
+
+    return targets_one_hot
     

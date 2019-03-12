@@ -47,6 +47,8 @@ def get_args():
     parser.add_argument('--gpu_id', type=str, default="None", help="A string indicating the gpu to use")
     parser.add_argument('--use_cluster', nargs="?", type=str2bool, default=False,
                         help='A flag indicating whether we will use the cluster or not')
+    parser.add_argument('--consider_manual',nargs="?",type=str2bool,default=False,
+                        help = 'cosider manual')
     parser.add_argument('--weight_decay_coefficient', nargs="?", type=float, default=1e-05,
                         help='Weight decay to use for Adam')
     parser.add_argument('--dropout_rate', nargs="?", type=float, default=0.,

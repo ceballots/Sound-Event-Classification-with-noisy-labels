@@ -17,7 +17,7 @@ class DataProvider(object):
     """Generic data provider."""
 
     def __init__(self, inputs, targets, batch_size, max_num_batches=-1,
-                 shuffle_order=False, rng=None,dict_ = None, data_size=17310):
+                 shuffle_order=False, rng=None,dict_ = None,manual_verified = None, data_size=17310):
         """Create a new data provider object.
         Args:
             inputs (ndarray): Array of data input features of shape
@@ -37,6 +37,7 @@ class DataProvider(object):
         self.targets = targets
         self.dict_ = dict_
         self.data_size = data_size
+        self.manual_verified = manual_verified
         if batch_size < 1:
             raise ValueError('batch_size must be >= 1')
         self._batch_size = batch_size
@@ -321,10 +322,14 @@ class AudioDataProvider(DataProvider):
         )
         
         # Read data
-        data = h5py.File(h5_data_path,"r")        
+        data = h5py.File(h5_data_path,"r")       
+        print(data.keys()) 
         inputs = data['all_inputs'][:]
         targ = data['targets'][:]
-        
+        if self.which_set ==  'train':
+                manual_verified = data['manually_verified'][:]
+        else:
+                manual_verified = None
         # Create dictionary to assure one_of_k_targets work
         df=pd.read_csv(csv_data_path)    
         keys = df.label.unique()
@@ -340,7 +345,7 @@ class AudioDataProvider(DataProvider):
         data.close()
                          
         super(AudioDataProvider, self).__init__(
-            inputs, targets, batch_size, max_num_batches, shuffle_order, rng, dict_, data_size)
+            inputs, targets, batch_size, max_num_batches, shuffle_order, rng, dict_,manual_verified, data_size)
 
     #def next(self):
         """Returns next data batch or raises `StopIteration` if at end."""

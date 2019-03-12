@@ -19,7 +19,7 @@ import losses as CustomLosses
 class ExperimentBuilder(nn.Module):
     def __init__(self, network_model, experiment_name, num_epochs, train_data, val_data,
                  test_data,batch_size, weight_decay_coefficient, use_gpu,training_instances,
-                 test_instances,val_instances,image_height, image_width,eps_smooth,num_classes,loss_function,use_cluster,args,gpu_id,q_=0.8,continue_from_epoch=-1):
+                 test_instances,val_instances,image_height, image_width,eps_smooth,num_classes,loss_function,use_cluster,args,gpu_id,consider_manual = False,q_=0.8,continue_from_epoch=-1):
         """
         Initializes an ExperimentBuilder object. Such an object takes care of running training and evaluation of a deep net
         on a given dataset. It also takes care of saving per epoch models and automatically inferring the best val model
@@ -72,6 +72,7 @@ class ExperimentBuilder(nn.Module):
         self.val_instances = val_instances
         self.image_height = image_height
         self.image_width = image_width
+        self.consider_manual = consider_manual
         self.optimizer = optim.Adam(self.parameters(), amsgrad=False,
                                     weight_decay=weight_decay_coefficient)
         # Generate the directory names
@@ -132,7 +133,7 @@ class ExperimentBuilder(nn.Module):
         return total_num_params
 
 
-    def run_train_iter(self, x, y,epoch_number = -1):
+    def run_train_iter(self, x, y,manual_verified,epoch_number = -1):
         """
         Receives the inputs and targets for the model and runs a training iteration. Returns loss and accuracy metrics.
         :param x: The inputs to the model. A numpy array of shape batch_size, channels, height, width
@@ -157,7 +158,7 @@ class ExperimentBuilder(nn.Module):
         out = self.model.forward_train(x)  # forward the data in the model
         
         loss = CustomLosses.loss_function(out,y,y_no_cuda,self.num_classes,self.device,self.eps_smooth,self.loss_function,
-                                          array_manual_label=None,consider_manual = False)
+                                          array_manual_label=manual_verified,consider_manual = self.consider_manual)
         
        #if self.loss_function=='CCE':
        #    loss = F.cross_entropy(input=out, target=y)  # compute loss
@@ -248,9 +249,9 @@ class ExperimentBuilder(nn.Module):
             print("num batches",train_number_batches)
             with tqdm.tqdm(total=train_number_batches-1) as pbar_train:  # create a progress bar for training
                  for idx in range(train_number_batches-1):                   
-                    x,y = self.get_batch(data = self.train_data,
-                                             idx = idx, number_batches = train_number_batches)                     
-                    loss, accuracy = self.run_train_iter(x=x, y=y,epoch_number = epoch_idx)  # take a training iter step
+                    x,y,manual_verified = self.get_batch(data = self.train_data,
+                                             idx = idx, number_batches = train_number_batches,train=True)                     
+                    loss, accuracy = self.run_train_iter(x=x, y=y,manual_verified=manual_verified,epoch_number = epoch_idx)  # take a training iter step
                     current_epoch_losses["train_loss"].append(loss)  # add current iter loss to the train loss list
                     current_epoch_losses["train_acc"].append(accuracy)  # add current iter acc to the train acc list
                     pbar_train.update(1)
@@ -285,7 +286,7 @@ class ExperimentBuilder(nn.Module):
             # create a string to use to report our epoch metrics
             epoch_elapsed_time = time.time() - epoch_start_time  # calculate time taken for epoch
             epoch_elapsed_time = "{:.4f}".format(epoch_elapsed_time)
-            print("Epoch {}:".format(epoch_idx), out_string, "epoch time", epoch_elapsed_time, "seconds")
+            #print("Epoch {}:".format(epoch_idx), out_string, "epoch time", epoch_elapsed_time, "seconds")
             self.state['current_epoch_idx']=epoch_idx
             self.state['best_val_model_acc']=self.best_val_model_acc
             self.state['best_val_model_idx']=self.best_val_model_idx
@@ -323,7 +324,7 @@ class ExperimentBuilder(nn.Module):
 
         return total_losses, test_losses
 
-    def get_batch(self, data, idx, number_batches):
+    def get_batch(self, data, idx, number_batches,train=False):
         """
         Get batch data and convert it from h5py to numpy format
 
@@ -335,8 +336,14 @@ class ExperimentBuilder(nn.Module):
         if idx == number_batches - 1:
             x_np = data.inputs[idx*self.batch_size:]
             y = data.targets[idx*self.batch_size:]
+            if train == True:
+                manual = data.manual_verified[idx*self.batch_size:]
+                return x_np,y,manual
             return x_np,y
         else:
             x_np = data.inputs[idx*self.batch_size:(idx+1)*self.batch_size]
             y = data.targets[idx*self.batch_size:(idx+1)*self.batch_size]
+            if train == True:
+                manual = data.manual_verified[idx*self.batch_size:(idx+1)*self.batch_size]
+                return x_np,y,manual
             return x_np,y
