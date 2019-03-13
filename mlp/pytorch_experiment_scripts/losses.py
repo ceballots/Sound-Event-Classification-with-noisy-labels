@@ -73,12 +73,11 @@ def loss_function(pred,targets,y_no_cuda,num_classes,device,eps_smoothing=0,loss
             loss = -(targets * pred)
             loss = loss.sum(dim=1)
             loss = loss.mean()
-            print(pred)
             return loss
         elif loss_function == 'MAE':
-            print('mae w/ eps')
-            print(pred_probs)
-            print(targets)
+#            print('mae w/ eps')
+#            print(pred_probs)
+ #           print(targets)
             return nn.L1Loss(pred_probs,targets)
                 
 
@@ -93,17 +92,21 @@ def consider_manual_labeled(targets_one_hot,targets,array_manual_label,num_class
     
     count = 0
     idx_manual = np.nonzero(array_manual_label==1)[0]
-    
+    targets = targets[idx_manual]
     idx_manual = torch.from_numpy(idx_manual)
     idx_manual = idx_manual.long()
 #    print(idx_manual) 
     subs = torch.zeros(targets.shape[0],num_classes).scatter_(1,targets.view(-1,1),1)
+    targets_one_hot[idx_manual] =  subs
+    #print(idx_manual)
+    #print(targets_one_hot)
+    return targets_one_hot
+"""
     for index in range(targets.shape[0]):
         if array_manual_label[index] == 1:
 
             targets_one_hot[index] = subs[count]
             count = count + 1
     
-
-    return targets_one_hot
-    
+    """
+  

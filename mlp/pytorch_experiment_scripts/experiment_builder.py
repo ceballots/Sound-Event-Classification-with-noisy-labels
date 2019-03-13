@@ -1,4 +1,3 @@
-
 from torch import nn
 from copy import deepcopy
 import torch
@@ -193,14 +192,14 @@ class ExperimentBuilder(nn.Module):
         y = y.to(self.device)
         out = self.model.forward(x)  # forward the data in the model
         
-        loss = CustomLosses.loss_function(out,y,y_no_cuda,self.num_classes,self.device,self.eps_smooth,self.loss_function,
-                                          array_manual_label=None,consider_manual = False)
+       # loss = CustomLosses.loss_function(out,y,y_no_cuda,self.num_classes,self.device,self.eps_smooth,self.loss_function,
+       #                                   array_manual_label=None,consider_manual = False)
         
-       #if self.loss_function=='CCE':
-       #    loss = F.cross_entropy(input=out, target=y)  # compute loss
-       #elif self.loss_function=='lq_loss':
-       #    loss=CustomLosses.lq_loss(y_true=y,y_pred=out,_q=self.q_)
-            
+      # if self.loss_function == 'CCE':
+        loss = F.cross_entropy(input=out, target=y)  # compute loss
+      # elif self.loss_function=='lq_loss':
+      #     loss=CustomLosses.lq_loss(y_true=y,y_pred=out,_q=self.q_)
+     
         _, predicted = torch.max(out.data, 1)  # get argmax of predictions
         accuracy = np.mean(list(predicted.eq(y.data).cpu()))  # compute accuracy
         return loss.data.detach().cpu().numpy(), accuracy
@@ -286,7 +285,7 @@ class ExperimentBuilder(nn.Module):
             # create a string to use to report our epoch metrics
             epoch_elapsed_time = time.time() - epoch_start_time  # calculate time taken for epoch
             epoch_elapsed_time = "{:.4f}".format(epoch_elapsed_time)
-            #print("Epoch {}:".format(epoch_idx), out_string, "epoch time", epoch_elapsed_time, "seconds")
+            print("Epoch {}:".format(epoch_idx), out_string, "epoch time", epoch_elapsed_time, "seconds")
             self.state['current_epoch_idx']=epoch_idx
             self.state['best_val_model_acc']=self.best_val_model_acc
             self.state['best_val_model_idx']=self.best_val_model_idx
