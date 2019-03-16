@@ -5,6 +5,7 @@ data points.
 """
 
 import pickle
+from sklearn.utils import shuffle
 import gzip
 import numpy as np
 import os
@@ -271,7 +272,7 @@ class AudioDataProvider(DataProvider):
     """Data provider for FSDksoubd database."""
 
     def __init__(self, which_set='train', batch_size=64, max_num_batches=-1,
-                 shuffle_order=True, rng=None, flatten=False):
+                 shuffle_order=True, rng=None, flatten=False,data_augmentation=False,augmentation_number=0,manual_verified_on=False):
         """Create a new EMNIST data provider object.
         Args:
             which_set: One of 'train', 'valid' or 'eval'. Determines which
@@ -325,12 +326,35 @@ class AudioDataProvider(DataProvider):
         data = h5py.File(h5_data_path,"r")       
         print(data.keys()) 
         inputs = data['all_inputs'][:]
+
         targ = data['targets'][:]
         if self.which_set ==  'train':
                 manual_verified = data['manually_verified'][:]
         else:
                 manual_verified = None
+        
+        if data_augmentation and self.which_set == 'train':
+            augmentation_values = [0.7,0.8,0.9]
+            for number in range(0,augmentation_number):
+                data_temp = h5py.File(os.path.join(h5_first_path,'processed_data_{0}{1}_speed.hdf5'.format(which_set,augmentation_values[number])))
+                inputs = np.concatenate((inputs, data_temp['all_inputs'][:]))
+                targ= np.concatenate((targ,data_temp['targets'][:]))
+                manual_verified= np.concatenate((manual_verified, data_temp['manually_verified'][:]))
+            if manual_verified_on:
+                idx_manual = np.where(manual_verified == 1)
+                inputs = inputs[idx_manual]
+                targ= targ[idx_manual]
+            del(data_temp)
+            arr = np.arange(inputs.shape[0])
+            np.random.shuffle(arr)
+            inputs = inputs[arr]
+            targ= targ[arr]
+            manual_verified=manual_verified[arr]
+            data_size = inputs.shape[0] 
+            print(inputs.shape) 
+            print("data size", data_size)   
         # Create dictionary to assure one_of_k_targets work
+        
         df=pd.read_csv(csv_data_path)    
         keys = df.label.unique()
         keys_sorted = sorted(keys)

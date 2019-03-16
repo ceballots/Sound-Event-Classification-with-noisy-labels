@@ -59,11 +59,12 @@ def get_args():
                         help='q parameter for loss_q, by default 0.8')
     parser.add_argument('--eps_smooth', nargs="?", type=float, default=0.1,
                         help='Label smoothing parameter')
-#parser.add_argument('--data_augmentation', nargs="?", type=string, default=False,
- #                       help='if you want to add data augmentation')
-#parser.add_argument('--augmentation_number', nargs="?", type=int, default=0,
-  #                      help='how much data augmentation, from 0 to 4')    
-  
+    parser.add_argument('--data_augmentation', nargs="?", type=str2bool, default=False,
+                        help='if you want to add data augmentation')
+    parser.add_argument('--augmentation_number', nargs="?", type=int, default=0,
+                        help='how much data augmentation, from 0 to 4')    
+    parser.add_argument('--manual_verified_on', nargs="?", type=str2bool, default=False,
+                        help='will use just manual verified data to train')
     args = parser.parse_args()
     
     gpu_id = str(args.gpu_id)
