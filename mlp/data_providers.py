@@ -116,10 +116,10 @@ class DataProvider(object):
 
     def shuffle(self):
         """Randomly shuffles order of data."""
-        #perm = self.rng.permutation(data_size)
-        #self._current_order = self._current_order[perm]
-        #self.inputs = self.inputs[perm]
-        #self.targets = self.targets[perm]
+        perm = self.rng.permutation(self.data_size)
+        self._current_order = self._current_order[perm]
+        self.inputs = self.inputs[perm]
+        self.targets = self.targets[perm]
 
     def next(self):
         """Returns next data batch or raises `StopIteration` if at end."""
@@ -300,7 +300,7 @@ class AudioDataProvider(DataProvider):
         if which_set == "train":
             data_size= 171310 #9473 #17310
         if which_set == "test":
-            data_size= 947#1600 #947
+            data_size= 611 #947
         if which_set == "valid":
             data_size = 275
         
@@ -334,9 +334,9 @@ class AudioDataProvider(DataProvider):
                 manual_verified = None
         
         if data_augmentation and self.which_set == 'train':
-            augmentation_values = [0.7,0.8,0.9]
+            augmentation_values_speed = [0.7,0.8,0.9,1.2]
             for number in range(0,augmentation_number):
-                data_temp = h5py.File(os.path.join(h5_first_path,'processed_data_{0}{1}_speed.hdf5'.format(which_set,augmentation_values[number])))
+                data_temp = h5py.File(os.path.join(h5_first_path,'processed_data_{0}{1}_speed.hdf5'.format(which_set,augmentation_values_speed[number])))
                 inputs = np.concatenate((inputs, data_temp['all_inputs'][:]))
                 targ= np.concatenate((targ,data_temp['targets'][:]))
                 manual_verified= np.concatenate((manual_verified, data_temp['manually_verified'][:]))
@@ -377,29 +377,8 @@ class AudioDataProvider(DataProvider):
     #    return inputs_batch, self.to_one_of_k(targets_batch)
 
     #def to_one_of_k(self, int_targets):
-        """Converts integer coded class target to 1 of K coded targets.
-        Args:
-            int_targets (ndarray): Array of integer coded class targets (i.e.
-                where an integer from 0 to `num_classes` - 1 is used to
-                indicate which is the correct class). This should be of shape
-                (num_data,).
-        Returns:
-            Array of 1 of K coded targets i.e. an array of shape
-            (num_data, num_classes) where for each row all elements are equal
-            to zero except for the column corresponding to the correct class
-            which is equal to one.
-        """
-        
-    #    keys = np.unique(int_targets)
-    #    values = np.arange(0,len(keys))
-    #   dict_ = dict(zip(keys,values))
-    #   
-    #   targets_int = np.asarray([dict_[tar] for tar in int_targets])
-    #   
-    #   
-    #   one_of_k_targets = np.zeros((targets_int.shape[0], self.num_classes))
-    #   one_of_k_targets[range(targets_int.shape[0]),targets_int] = 1
-    #   return one_of_k_targets
+
+
 
 class MetOfficeDataProvider(DataProvider):
     """South Scotland Met Office weather data provider."""

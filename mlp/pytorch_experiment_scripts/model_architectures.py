@@ -91,7 +91,7 @@ class FCCNetwork(nn.Module):
 
 
 class ConvolutionalNetwork(nn.Module):
-    def __init__(self, input_shape, dim_reduction_type, num_output_classes, num_filters, num_layers,kernel_size,dropout, use_bias=False):
+    def __init__(self, input_shape, dim_reduction_type, num_output_classes, num_filters, num_layers,kernel_size,args,dropout, use_bias=False):
         """
         Initializes a convolutional network module object.
         :param input_shape: The shape of the inputs going in to the network.
@@ -115,6 +115,13 @@ class ConvolutionalNetwork(nn.Module):
         # build the network
         self.dropout = dropout
         self.build_module()
+        self.stack = args.stack
+        print(input_shape)
+        print(type(input_shape))
+        if self.stack:
+           b,c,h,w = self.input_shape
+           b = 2*b
+           self.input_shape = (b,c,h,w)
 
     def build_module(self):
         """

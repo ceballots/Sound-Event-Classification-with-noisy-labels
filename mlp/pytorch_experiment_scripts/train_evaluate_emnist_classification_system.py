@@ -24,20 +24,19 @@ assert len(num_filters) == args.num_layers, "Not specified number of filter per 
 
 
 train_data = data_providers.AudioDataProvider('train', batch_size=args.batch_size,
-                                               rng=rng,shuffle_order=False,data_augmentation= args.data_augmentation,
+                                               rng=rng,shuffle_order=True,data_augmentation= args.data_augmentation,
 							augmentation_number= args.augmentation_number,manual_verified_on=args.manual_verified_on)  # initialize our rngs using the argument set seed
 val_data = data_providers.AudioDataProvider('valid', batch_size=args.batch_size,
                                              rng=rng,shuffle_order=False)  # initialize our rngs using the argument set seed
 test_data = data_providers.AudioDataProvider('test', batch_size=args.batch_size,
                                               rng=rng,shuffle_order=False)  # initialize our rngs using the argument set seed
 
-
 assert train_data.dict_ == val_data.dict_ == test_data.dict_, "Different dictionaries!"
 
 custom_conv_net = ConvolutionalNetwork(  # initialize our network object, in this case a ConvNet
     input_shape=(args.batch_size, args.image_num_channels, args.image_height, args.image_width),
     dim_reduction_type=args.dim_reduction_type,
-        num_output_classes=train_data.num_classes, num_filters=num_filters,kernel_size = args.kernel_size,        num_layers=args.num_layers, dropout=args.dropout_rate,use_bias=False)
+        num_output_classes=train_data.num_classes, num_filters=num_filters,kernel_size = args.kernel_size,        num_layers=args.num_layers, dropout=args.dropout_rate,args=args,use_bias=False)
 
 print("definicion convolutional network ok")
 

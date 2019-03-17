@@ -8,13 +8,13 @@ if [ $# != 1 ]; then
   exit 1;
 fi
 
-cd ~/DataProcessed/processed_wavs_$type_data
+cd ~/DataProcessed/processed_wavs_${type_data}
 #number_of_elements=${ls -1 | wc -l}
 
 for element in $(ls);do
     echo changing speed of $element
     for speed in 0.9 1.2;do
        mkdir -p ../data_${type_data}_${speed}_pitch
-       sox -t 0.98 wav $element -t wav ../data_${type_data}_${speed}_pitch/$element-${speed}.wav speed -s $speed
+       sox -t wav $element -t wav ../data_${type_data}_${speed}_pitch/$element-${speed}.wav speed $speed
     done;
 done

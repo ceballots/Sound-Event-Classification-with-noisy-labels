@@ -11,9 +11,11 @@ import os
 import numpy as np
 import time
 import math
+from torch.autograd import Variable
 
 from storage_utils import save_statistics,save_parameters,load_statistics
 import losses as CustomLosses
+import mixup as MixUp 
 
 class ExperimentBuilder(nn.Module):
     def __init__(self, network_model, experiment_name, num_epochs, train_data, val_data,
@@ -86,7 +88,14 @@ class ExperimentBuilder(nn.Module):
         self.q_ = q_
         self.eps_smooth = eps_smooth
         self.num_classes = num_classes
-
+        self.mixup = args.mixup
+        self.alpha = args.alpha
+        self.use_gpu = args.use_gpu
+        self.stack = args.stack
+        self.width = args.image_width
+        self.heigth = args.image_height
+        if self.stack:
+            self.batch_size = 2*self.batch_size
         if not os.path.exists(self.experiment_folder):  # If experiment directory does not exist
             os.mkdir(self.experiment_folder)  # create the experiment directory
 
@@ -154,9 +163,25 @@ class ExperimentBuilder(nn.Module):
         x = x.to(self.device)
         y = y.to(self.device)
 
-        out = self.model.forward_train(x)  # forward the data in the model
-        
-        loss = CustomLosses.loss_function(out,y,y_no_cuda,self.num_classes,self.device,self.eps_smooth,self.loss_function,
+        if self.mixup == True:
+            inputs, targets_a, targets_b,y_, lam  = MixUp.mixup_data(x, y,y_no_cuda,self.num_classes,
+                                                       self.alpha, use_cuda=self.use_gpu)
+           # inputs, targets_a, targets_b = map(Variable, (inputs,
+           #                                           targets_a, targets_b))
+            if self.stack  == True:
+                x_stack = torch.stack((x, inputs), 0)
+                x_stack = x_stack.view((self.batch_size,1,self.heigth,self.width))
+                out = self.model.forward_train(x_stack) 
+                loss_mix = MixUp.mixup_criterion(out[:int(self.batch_size/2)],targets_a,targets_b,lam,self.device)
+                loss_smooth = CustomLosses.loss_function(out[int(self.batch_size/2):],y,y_no_cuda,self.num_classes,self.device,self.eps_smooth,self.loss_function,
+                                          array_manual_label=manual_verified,consider_manual = self.consider_manual)
+                loss = (loss_mix + loss_smooth)/2
+            else:
+                out = self.model.forward_train(x)  # forward the data in the model
+                loss = MixUp.mixup_criterion(out, targets_a, targets_b, lam,self.device)
+        else:
+            out = self.model.forward_train(x)
+            loss = CustomLosses.loss_function(out,y,y_no_cuda,self.num_classes,self.device,self.eps_smooth,self.loss_function,
                                           array_manual_label=manual_verified,consider_manual = self.consider_manual)
         
        #if self.loss_function=='CCE':
@@ -169,7 +194,11 @@ class ExperimentBuilder(nn.Module):
 
         self.optimizer.step()  # update network parameters
         _, predicted = torch.max(out.data, 1)  # get argmax of predictions
-        accuracy = np.mean(list(predicted.eq(y.data).cpu()))  # compute accuracy
+        if self.stack:
+            accuracy = np.mean(list(predicted[int(self.batch_size/2):].eq(y.data).cpu())) 
+        else:
+
+            accuracy = np.mean(list(predicted.eq(y.data).cpu()))  # compute accuracy
         return loss.data.detach().cpu().numpy(), accuracy
 
     def run_evaluation_iter(self, x, y):
@@ -239,6 +268,9 @@ class ExperimentBuilder(nn.Module):
                         "val_loss": []}  # initialize a dict to keep the per-epoch metrics
         train_number_batches = int(math.ceil(self.training_instances/self.batch_size))
         val_number_batches = int(math.ceil(self.val_instances/self.batch_size))
+        if self.stack:
+           train_number_batches = 2*train_number_batches
+           val_number_batches = 2*val_number_batches
         
         
         for i, epoch_idx in enumerate(range(self.starting_epoch, self.num_epochs)):
@@ -246,10 +278,14 @@ class ExperimentBuilder(nn.Module):
             current_epoch_losses = {"train_acc": [], "train_loss": [], "val_acc": [], "val_loss": []}
             
             print("num batches",train_number_batches)
-            with tqdm.tqdm(total=train_number_batches-1) as pbar_train:  # create a progress bar for training
-                 for idx in range(train_number_batches-1):                   
+            if self.stack:
+               total_ = train_number_batches-2
+            else:
+               total_ = train_number_batches-1
+            with tqdm.tqdm(total=total_) as pbar_train:  # create a progress bar for training
+                 for idx in range(total_):                   
                     x,y,manual_verified = self.get_batch(data = self.train_data,
-                                             idx = idx, number_batches = train_number_batches,train=True)                     
+                                             idx = idx, number_batches = total_,train=True)
                     loss, accuracy = self.run_train_iter(x=x, y=y,manual_verified=manual_verified,epoch_number = epoch_idx)  # take a training iter step
                     current_epoch_losses["train_loss"].append(loss)  # add current iter loss to the train loss list
                     current_epoch_losses["train_acc"].append(accuracy)  # add current iter acc to the train acc list
@@ -303,6 +339,8 @@ class ExperimentBuilder(nn.Module):
         current_epoch_losses = {"test_acc": [], "test_loss": []}  # initialize a statistics dict
 
         test_number_batches = int(math.ceil(self.test_instances/self.batch_size))
+        if self.stack:
+           test_number_batches = 2*test_number_batches
         with tqdm.tqdm(total=test_number_batches) as pbar_test:  # ini a progress bar
             for idx in range(test_number_batches):  # sample batch
                 x,y = self.get_batch(data = self.test_data,
@@ -331,18 +369,22 @@ class ExperimentBuilder(nn.Module):
         :param idx: current batch number
         :param number_batches: number of batches in set
         """
-
+        if self.stack:
+            batch_size =int(self.batch_size/2)
+        else:
+            batch_size = self.batch_size
+        
         if idx == number_batches - 1:
-            x_np = data.inputs[idx*self.batch_size:]
-            y = data.targets[idx*self.batch_size:]
+            x_np = data.inputs[idx*batch_size:(idx+1)*batch_size]
+            y = data.targets[idx*batch_size:(idx+1)*batch_size]
             if train == True:
-                manual = data.manual_verified[idx*self.batch_size:]
+                manual = data.manual_verified[idx*batch_size:]
                 return x_np,y,manual
             return x_np,y
         else:
-            x_np = data.inputs[idx*self.batch_size:(idx+1)*self.batch_size]
-            y = data.targets[idx*self.batch_size:(idx+1)*self.batch_size]
+            x_np = data.inputs[idx*batch_size:(idx+1)*batch_size]
+            y = data.targets[idx*batch_size:(idx+1)*batch_size]
             if train == True:
-                manual = data.manual_verified[idx*self.batch_size:(idx+1)*self.batch_size]
+                manual = data.manual_verified[idx*batch_size:(idx+1)*batch_size]
                 return x_np,y,manual
             return x_np,y

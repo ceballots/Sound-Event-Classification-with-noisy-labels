@@ -18,7 +18,7 @@ def get_args():
 
     parser.add_argument('--batch_size', nargs="?", type=int, default=64, help='Batch_size for experiment')
     parser.add_argument('--training_instances', nargs="?", type=int, default=17310, help='Number of training instances')
-    parser.add_argument('--test_instances', nargs="?", type=int, default=947, help='Number of test instances')
+    parser.add_argument('--test_instances', nargs="?", type=int, default=611, help='Number of test instances')
     parser.add_argument('--val_instances', nargs="?", type=int, default=275, help='Number of validation instances')
     parser.add_argument('--continue_from_epoch', nargs="?", type=int, default=-1, help='Batch_size for experiment')
     parser.add_argument('--seed', nargs="?", type=int, default=7112018,
@@ -65,6 +65,14 @@ def get_args():
                         help='how much data augmentation, from 0 to 4')    
     parser.add_argument('--manual_verified_on', nargs="?", type=str2bool, default=False,
                         help='will use just manual verified data to train')
+    parser.add_argument('--mixup', nargs="?", type=str2bool, default=False,
+                        help='Mixup')
+    parser.add_argument('--alpha', nargs="?", type=float, default=0.3,
+                        help='alpha')
+
+    parser.add_argument('--stack', nargs="?", type=str2bool, default=False,
+                        help='both label smooth and mixup')
+
     args = parser.parse_args()
     
     gpu_id = str(args.gpu_id)

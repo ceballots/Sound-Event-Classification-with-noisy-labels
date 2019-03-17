@@ -24,6 +24,8 @@ def convert2mel(audio,base_path,fs, n_fft,fmax,n_mels,hop_length_samples, window
             data,_ = librosa.core.load(os.path.join(base_path,"data_test_"+ data_augmentation,audio+"-"+data_augmentation.split("_")[0]+".wav"), sr=fs, res_type="kaiser_best")
     else:
         data, _ = librosa.core.load(path, sr=fs, res_type="kaiser_best")
+    if data.shape[0] < 64000:
+        data = np.pad(data, (( 64000 - data.shape[0])//2 +1, ( 64000 - data.shape[0])//2 +1 )   , 'constant', constant_values=(0,0))
     data = normalize_amplitude(data)[0:64000]
     powSpectrum = np.abs(stft(data+ 0.00001,n_fft,hop_length = hop_length_samples, win_length = window_lenght, window = windowing(window_lenght, sym=False), center=True, pad_mode='reflect'))**2
 

@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
-
 def lq_loss(y_true,y_pred,q=.8):
     """
     Implementation of loss function presented in:
@@ -56,6 +55,7 @@ def loss_function(pred,targets,y_no_cuda,num_classes,device,eps_smoothing=0,loss
     pred_probs = pred_probs.to(device)
     pred = F.log_softmax(pred, dim=-1)
     targets_int =  y_no_cuda
+    idx_manual = np.nonzero(array_manual_label==1)[0]
     if eps_smoothing > 0:
         eps_per_class = eps_smoothing / num_classes
         
@@ -63,8 +63,8 @@ def loss_function(pred,targets,y_no_cuda,num_classes,device,eps_smoothing=0,loss
         targets = p.scatter_(1, y_no_cuda.view(-1,1),1-eps_smoothing)
                 
         if (consider_manual and
-            len(array_manual_label) > 0):
-            
+            array_manual_label.shape[0] > 0 and
+            len(idx_manual) > 0):
             targets = consider_manual_labeled(targets,targets_int,array_manual_label,num_classes)
         
         targets = targets.to(device)
@@ -95,11 +95,8 @@ def consider_manual_labeled(targets_one_hot,targets,array_manual_label,num_class
     targets = targets[idx_manual]
     idx_manual = torch.from_numpy(idx_manual)
     idx_manual = idx_manual.long()
-#    print(idx_manual) 
     subs = torch.zeros(targets.shape[0],num_classes).scatter_(1,targets.view(-1,1),1)
     targets_one_hot[idx_manual] =  subs
-    #print(idx_manual)
-    #print(targets_one_hot)
     return targets_one_hot
 """
     for index in range(targets.shape[0]):
