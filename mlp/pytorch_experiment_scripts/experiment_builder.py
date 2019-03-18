@@ -33,7 +33,7 @@ class ExperimentBuilder(nn.Module):
         :param test_data: An object of the DataProvider type. Contains the test set.
         :param weight_decay_coefficient: A float indicating the weight decay to use with the adam optimizer.
         :param use_gpu: A boolean indicating whether to use a GPU or not.
-        :param continue_from_epoch: An int indicating whether we'll start from scrach (-1) or whether we'll reload a previously saved model of epoch 'continue_from_epoch' and continue training from there.
+        :param continue_from_epoch: An int indicating whether we'lll start from scrach (-1) or whether we'll reload a previously saved model of epoch 'continue_from_epoch' and continue training from there.
         """
         super(ExperimentBuilder, self).__init__()
         if torch.cuda.is_available() and use_gpu:  # checks whether a cuda gpu is available and whether the gpu flag is True

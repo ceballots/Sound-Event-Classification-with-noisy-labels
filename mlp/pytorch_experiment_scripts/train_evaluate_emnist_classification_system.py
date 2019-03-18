@@ -1,6 +1,6 @@
 import sys
 import os
-#sys.path.append(os.path.abspath("/home/jordi/mlp_audio/MLPProjectAudio/MLP_CW2/mlp"))
+#ssys.path.append(os.path.abspath("/home/jordi/mlp_audio/MLPProjectAudio/MLP_CW2/mlp"))
 
 import mlp.data_providers as data_providers
 import numpy as np

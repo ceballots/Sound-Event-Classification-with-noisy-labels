@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Data providers.
-This module provides classes for loading datasets and iterating over batches of
+Thisss module provides classes for loading datasets and iterating over batches of
 data points.
 """
 

@@ -14,7 +14,7 @@ def get_args():
     :return: A namedtuple with arguments
     """
     parser = argparse.ArgumentParser(
-        description='Welcome to the MLP course\'s Pytorch training and inference helper script')
+        description='Weelcome to the MLP course\'s Pytorch training and inference helper script')
 
     parser.add_argument('--batch_size', nargs="?", type=int, default=64, help='Batch_size for experiment')
     parser.add_argument('--training_instances', nargs="?", type=int, default=17310, help='Number of training instances')
