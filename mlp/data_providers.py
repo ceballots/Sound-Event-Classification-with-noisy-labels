@@ -82,7 +82,7 @@ class DataProvider(object):
         # maximum possible number of batches is equal to number of whole times
         # batch_size divides in to the number of data points which can be
         # found using integer division
-        possible_num_batches = self.data_size // self.batch_size
+        possible_num_batches = self.inputs.shape[0] // self.batch_size
         if self.max_num_batches == -1:
             self.num_batches = possible_num_batches
         else:
@@ -116,10 +116,10 @@ class DataProvider(object):
 
     def shuffle(self):
         """Randomly shuffles order of data."""
-        perm = self.rng.permutation(self.data_size)
-        self._current_order = self._current_order[perm]
-        self.inputs = self.inputs[perm]
-        self.targets = self.targets[perm]
+       # perm = self.rng.permutation(self.inputs.shape[0])
+        #self._current_order = self._current_order[perm]
+        #self.inputs = self.inputs[perm]
+        #self.targets = self.targets[perm]
 
     def next(self):
         """Returns next data batch or raises `StopIteration` if at end."""
@@ -272,7 +272,7 @@ class AudioDataProvider(DataProvider):
     """Data provider for FSDksoubd database."""
 
     def __init__(self, which_set='train', batch_size=64, max_num_batches=-1,
-                 shuffle_order=True, rng=None, flatten=False,data_augmentation=False,augmentation_number=0,manual_verified_on=False):
+                 shuffle_order=True, rng=None, flatten=False,data_augmentation=False,augmentation_number=0,manual_verified_on=False,pitch_augmentation=False,augmentation_pitch=0):
         """Create a new EMNIST data provider object.
         Args:
             which_set: One of 'train', 'valid' or 'eval'. Determines which
@@ -335,6 +335,7 @@ class AudioDataProvider(DataProvider):
         
         if data_augmentation and self.which_set == 'train':
             augmentation_values_speed = [0.7,0.8,0.9,1.2]
+            augmentation_pitch_list = [0.9,1.2]
             for number in range(0,augmentation_number):
                 data_temp = h5py.File(os.path.join(h5_first_path,'processed_data_{0}{1}_speed.hdf5'.format(which_set,augmentation_values_speed[number])))
                 inputs = np.concatenate((inputs, data_temp['all_inputs'][:]))
@@ -345,6 +346,15 @@ class AudioDataProvider(DataProvider):
                 inputs = inputs[idx_manual]
                 targ= targ[idx_manual]
             del(data_temp)
+
+            if pitch_augmentation:
+                for number in range(0,augmentation_pitch):
+                    data_temp = h5py.File(os.path.join(h5_first_path,'processed_data_{0}{1}_pitch.hdf5'.format(which_set,augmentation_pitch_list[number])))
+                    inputs = np.concatenate((inputs, data_temp['all_inputs'][:]))
+                    targ= np.concatenate((targ,data_temp['targets'][:]))
+                    manual_verified= np.concatenate((manual_verified, data_temp['manually_verified'][:]))
+                del(data_temp)
+       
             arr = np.arange(inputs.shape[0])
             np.random.shuffle(arr)
             inputs = inputs[arr]
@@ -371,10 +381,10 @@ class AudioDataProvider(DataProvider):
         super(AudioDataProvider, self).__init__(
             inputs, targets, batch_size, max_num_batches, shuffle_order, rng, dict_,manual_verified, data_size)
 
-    #def next(self):
+    def next(self):
         """Returns next data batch or raises `StopIteration` if at end."""
-    #    inputs_batch, targets_batch = super(AudioDataProvider, self).next()
-    #    return inputs_batch, self.to_one_of_k(targets_batch)
+        inputs_batch, targets_batch = super(AudioDataProvider, self).next()
+        return inputs_batch, self.to_one_of_k(targets_batch)
 
     #def to_one_of_k(self, int_targets):
 

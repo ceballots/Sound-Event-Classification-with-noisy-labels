@@ -94,6 +94,7 @@ class ExperimentBuilder(nn.Module):
         self.stack = args.stack
         self.width = args.image_width
         self.heigth = args.image_height
+        self.shuffle = args.shuffle
         if self.stack:
             self.batch_size = 2*self.batch_size
         if not os.path.exists(self.experiment_folder):  # If experiment directory does not exist
@@ -282,8 +283,15 @@ class ExperimentBuilder(nn.Module):
                total_ = train_number_batches-2
             else:
                total_ = train_number_batches-1
+            
+            if self.shuffle:
+                idx = np.arange(0,self.training_instances,dtype=int)
+                np.random.shuffle(idx)
+                self.train_data.inputs = self.train_data.inputs[idx]
+                self.train_data.targets = self.train_data.targets[idx]
             with tqdm.tqdm(total=total_) as pbar_train:  # create a progress bar for training
                  for idx in range(total_):                   
+                        
                     x,y,manual_verified = self.get_batch(data = self.train_data,
                                              idx = idx, number_batches = total_,train=True)
                     loss, accuracy = self.run_train_iter(x=x, y=y,manual_verified=manual_verified,epoch_number = epoch_idx)  # take a training iter step
@@ -364,7 +372,6 @@ class ExperimentBuilder(nn.Module):
     def get_batch(self, data, idx, number_batches,train=False):
         """
         Get batch data and convert it from h5py to numpy format
-
         :param data: {train,validation,test} data
         :param idx: current batch number
         :param number_batches: number of batches in set

@@ -70,8 +70,15 @@ def get_args():
     parser.add_argument('--alpha', nargs="?", type=float, default=0.3,
                         help='alpha')
 
+    parser.add_argument('--pitch_augmentation', nargs="?", type=str2bool, default=False,
+                        help='if you want to add pitch data augmentation')
+    parser.add_argument('--augmentation_pitch', nargs="?", type=int, default=0,
+                        help='how much data augmentation pitch, from 0 to 2')  
+
     parser.add_argument('--stack', nargs="?", type=str2bool, default=False,
                         help='both label smooth and mixup')
+    parser.add_argument('--shuffle', nargs="?", type=str2bool, default=False,
+                        help='shuffle before epoch')
 
     args = parser.parse_args()
     
