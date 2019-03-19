@@ -305,12 +305,12 @@ class AudioDataProvider(DataProvider):
             data_size = 275
         
         #h5_first_path = "/home/jordi/Data/DataProcessed"   
-        h5_first_path = "/home/fabian/DataProcessed"   
+        h5_first_path = "../DataProcessed"   
         
         h5_data_path = os.path.join(h5_first_path,
                                     'processed_data_{}.hdf5'.format(which_set))
         
-        csv_first_path = "/home/fabian/project_audio/FSDnoisy18k.meta"
+        csv_first_path = "FSDnoisy18k.meta"
         #csv_first_path = "/home/fabian/fsd2018/FSDKaggle2018.meta"
         csv_data_path = os.path.join(csv_first_path,
                                     '{}_set.csv'.format(which_set))
