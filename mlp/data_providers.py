@@ -341,11 +341,11 @@ class AudioDataProvider(DataProvider):
                 inputs = np.concatenate((inputs, data_temp['all_inputs'][:]))
                 targ= np.concatenate((targ,data_temp['targets'][:]))
                 manual_verified= np.concatenate((manual_verified, data_temp['manually_verified'][:]))
+                del(data_temp)
             if manual_verified_on:
                 idx_manual = np.where(manual_verified == 1)
                 inputs = inputs[idx_manual]
                 targ= targ[idx_manual]
-            del(data_temp)
 
             if pitch_augmentation:
                 for number in range(0,augmentation_pitch):
@@ -354,7 +354,7 @@ class AudioDataProvider(DataProvider):
                     targ= np.concatenate((targ,data_temp['targets'][:]))
                     manual_verified= np.concatenate((manual_verified, data_temp['manually_verified'][:]))
                 del(data_temp)
-       
+
             arr = np.arange(inputs.shape[0])
             np.random.shuffle(arr)
             inputs = inputs[arr]
