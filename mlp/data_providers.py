@@ -305,12 +305,12 @@ class AudioDataProvider(DataProvider):
             data_size = 275
         
         #h5_first_path = "/home/jordi/Data/DataProcessed"   
-        h5_first_path = "/home/fabian/DataProcessed"   
+        h5_first_path = "../DataProcessed"   
         
         h5_data_path = os.path.join(h5_first_path,
                                     'processed_data_{}.hdf5'.format(which_set))
         
-        csv_first_path = "/home/fabian/project_audio/FSDnoisy18k.meta"
+        csv_first_path = "FSDnoisy18k.meta"
         #csv_first_path = "/home/fabian/fsd2018/FSDKaggle2018.meta"
         csv_data_path = os.path.join(csv_first_path,
                                     '{}_set.csv'.format(which_set))
@@ -341,11 +341,11 @@ class AudioDataProvider(DataProvider):
                 inputs = np.concatenate((inputs, data_temp['all_inputs'][:]))
                 targ= np.concatenate((targ,data_temp['targets'][:]))
                 manual_verified= np.concatenate((manual_verified, data_temp['manually_verified'][:]))
+                del(data_temp)
             if manual_verified_on:
                 idx_manual = np.where(manual_verified == 1)
                 inputs = inputs[idx_manual]
                 targ= targ[idx_manual]
-            del(data_temp)
 
             if pitch_augmentation:
                 for number in range(0,augmentation_pitch):
@@ -354,7 +354,7 @@ class AudioDataProvider(DataProvider):
                     targ= np.concatenate((targ,data_temp['targets'][:]))
                     manual_verified= np.concatenate((manual_verified, data_temp['manually_verified'][:]))
                 del(data_temp)
-       
+
             arr = np.arange(inputs.shape[0])
             np.random.shuffle(arr)
             inputs = inputs[arr]

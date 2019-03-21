@@ -285,7 +285,8 @@ class ExperimentBuilder(nn.Module):
                total_ = train_number_batches-1
             
             if self.shuffle:
-                idx = np.arange(0,self.training_instances,dtype=int)
+                idx = np.arange(0,self.train_data.inputs.shape[0])
+                print("before shuffle", self.train_data.inputs.shape)
                 np.random.shuffle(idx)
                 self.train_data.inputs = self.train_data.inputs[idx]
                 self.train_data.targets = self.train_data.targets[idx]
